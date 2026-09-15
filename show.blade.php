@@ -1,83 +1,180 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table: {{ $tableName }}</title>
+@extends('layouts.app')
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 30px;
-        }
+@section('content')
 
-        h1 {
-            color: #333;
-        }
+<div class="container mt-5">
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            background: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: right;
-        }
+        <div>
 
-        th {
-            background: #28a745;
-            color: #fff;
-        }
+            <a href="{{ route('tables.index') }}" class="btn btn-secondary mb-2">
+                ← Back to Tables
+            </a>
 
-        tr:nth-child(even) {
-            background: #f9f9f9;
-        }
+            <h1>
+                📄 Table: <code>{{ $tableName }}</code>
+            </h1>
 
-        a.back {
-            display: inline-block;
-            margin-bottom: 15px;
-            text-decoration: none;
-            color: #28a745;
-        }
-    </style>
-</head>
+            <p class="text-muted">
+                {{ $rows->total() }} total records
+            </p>
 
-<body>
+        </div>
 
-    <a class="back" href="{{ route('tables.index') }}">
-        ⬅ رجوع لكل الجداول
-    </a>
+        <div>
 
-    <h1>📄 Table: {{ $tableName }}</h1>
+            <a
+                href="{{ route('tables.create', $tableName) }}"
+                class="btn btn-success"
+            >
+                + Add Record
+            </a>
 
-    @if($rows->count() > 0)
+            <a
+                href="{{ route('tables.export', $tableName) }}"
+                class="btn btn-warning"
+            >
+                📥 Export CSV
+            </a>
 
-        <table>
-            <tr>
-                @foreach((array) $rows->first() as $col => $val)
-                    <th>{{ $col }}</th>
-                @endforeach
-            </tr>
+        </div>
 
-            @foreach($rows as $row)
-                <tr>
-                    @foreach((array) $row as $val)
-                        <td>{{ $val }}</td>
-                    @endforeach
-                </tr>
-            @endforeach
-        </table>
+    </div>
 
-    @else
 
-        <p>لا يوجد بيانات في هذا الجدول.</p>
+    @if(session('success'))
+
+        <div class="alert alert-success alert-dismissible fade show">
+
+            {{ session('success') }}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+            ></button>
+
+        </div>
 
     @endif
 
-</body>
-</html>
+
+    @if(session('error'))
+
+        <div class="alert alert-danger alert-dismissible fade show">
+
+            {{ session('error') }}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+            ></button>
+
+        </div>
+
+    @endif
+
+
+    <div class="card">
+
+        <div class="card-header">
+            <h5 class="mb-0">Table Records</h5>
+        </div>
+
+        <div class="card-body">
+
+            @if($rows->count() > 0)
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-striped">
+
+                        <thead>
+                            <tr>
+
+                                @foreach($rows->first()->getAttributes() as $column => $value)
+
+                                    <th>{{ $column }}</th>
+
+                                @endforeach
+
+                                <th>Actions</th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach($rows as $row)
+
+                                <tr>
+
+                                    @foreach($row->getAttributes() as $value)
+
+                                        <td>
+                                            {{ $value }}
+                                        </td>
+
+                                    @endforeach
+
+                                    <td>
+
+                                        <a
+                                            href="{{ route('tables.edit', [$tableName, $row->id]) }}"
+                                            class="btn btn-sm btn-primary"
+                                        >
+                                            Edit
+                                        </a>
+
+                                        <form
+                                            action="{{ route('tables.destroy', [$tableName, $row->id]) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                        >
+
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this record?')"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            @endforeach
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="mt-3">
+                    {{ $rows->links() }}
+                </div>
+
+            @else
+
+                <div class="alert alert-info text-center">
+                    No records found in this table.
+                </div>
+
+            @endif
+
+        </div>
+
+    </div>
+
+</div>
+
+@endsection
